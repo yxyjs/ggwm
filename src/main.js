@@ -4,6 +4,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import FastClick from 'fastclick'
 import router from './router'
+import store from './store'
 
 if ('addEventListener' in document) {
   document.addEventListener('DOMContentLoaded', function () {
@@ -16,5 +17,6 @@ if ('addEventListener' in document) {
 new Vue({
   el: '#app',
   router,
+  store,
   render: h => h(App)
 })
