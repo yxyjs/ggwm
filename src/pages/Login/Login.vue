@@ -9,19 +9,19 @@
         </div>
       </div>
       <div class="login_content">
-        <form>
+        <form @submit.prevent="login">
           <div :class="{on:loginWay}">
             <section class="login_message">
               <input type="tel" maxlength="11" placeholder="手机号" v-model="phone" />
               <button
-                :disabled="!truePhone"
+                :disabled="!rightPhone"
                 class="get_verification"
-                :class="{true_phone:truePhone}"
+                :class="{true_phone:rightPhone}"
                 @click.prevent="getCode"
               >{{ computedTime ? `已发送${computedTime}s` : '获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码" />
+              <input type="tel" maxlength="6" placeholder="验证码" v-model="code" />
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
@@ -31,7 +31,7 @@
           <div :class="{on:!loginWay}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" />
+                <input type="text" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name" />
               </section>
               <section class="login_verification">
                 <input
@@ -50,8 +50,14 @@
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码" />
-                <img class="get_verification" src="./images/captcha.svg" alt="captcha" />
+                <input type="text" maxlength="11" placeholder="验证码" v-model="captcha" />
+                <img
+                  class="get_verification"
+                  src="http://localhost:3000/captcha"
+                  @click="getCaptcha"
+                  alt="captcha"
+                  ref="captcha"
+                />
               </section>
             </section>
           </div>
@@ -63,45 +69,136 @@
         <i class="iconfont icon-zuojiantou"></i>
       </a>
     </div>
+    <AlertTip :alertText="alertText" v-show="alertShow" @closeTip="closeTip" />
   </section>
 </template>
 
 <script type="text/ecmascript-6">
+import AlertTip from "../../components/AlertTip/AlertTip.vue";
+import { reqSendCode, reqSmsLogin, reqPwdLogin } from "@/api";
 export default {
   data() {
     return {
-      loginWay: true, //true代表短信登录,false代表密码登录
+      loginWay: false, //true代表短信登录,false代表密码登录
       phone: "", //手机号
       computedTime: 0, //倒计时
       showPwd: false, //是否显示密码
-      pwd: "" //密码
+      pwd: "", //密码
+      code: "", //手机验证码
+      captcha: "", //图形验证码
+      name: "",
+      alertText: "", //提示内容
+      alertShow: false
     };
   },
   computed: {
-    truePhone() {
+    rightPhone() {
       return /^1[3456789]\d{9}$/.test(this.phone);
     }
   },
   methods: {
-    getCode() {
+    // 异步获取验证码
+    async getCode() {
       // 如果没有计时器
       if (!this.computedTime) {
         // 启动倒计时
         this.computedTime = 10;
-        let timer = setInterval(() => {
+        this.timer = setInterval(() => {
           this.computedTime--;
           if (this.computedTime === 0) {
-            clearInterval(timer);
+            clearInterval(this.timer);
           }
         }, 1000);
         // 发送ajax请求
+        const result = await reqSendCode(this.phone);
+        if (result.code === 1) {
+          //显示提示
+          this.openTip(result.msg);
+          //停止计时
+          if (this.timer) {
+            this.computedTime = 0;
+            clearInterval(this.timer);
+            this.timer = null;
+          }
+        }
       }
+    },
+    // 异步登录
+    async login() {
+      this.$router.replace("/profile");
+      return;
+      let result;
+      if (this.loginWay) {
+        //短信登录
+        const { rightPhone, code, phone } = this;
+        if (!rightPhone) {
+          // 手机号不正确
+          this.openTip("手机号不正确");
+        } else if (!/^d{6}$/.test(code)) {
+          //验证码必须是6位数字
+          this.openTip("验证码必须是6位数字");
+        }
+        // 发送ajax
+        result = await reqSmsLogin(phone, code);
+      } else {
+        //密码登录
+        const { name, pwd, captcha } = this;
+        if (!name) {
+          //用户名必须指定
+          this.openTip("用户名必须指定");
+        } else if (!pwd) {
+          // 密码必须指定
+          this.openTip("密码必须指定");
+        } else if (!captcha) {
+          // 验证码必须指定
+          this.openTip("验证码必须指定");
+        }
+        // 发送ajax
+        result = await reqPwdLogin({ name, pwd, captcha });
+      }
+
+      // 停止计时
+      if (this.timer) {
+        this.computedTime = 0;
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+      // 根据结果数据处理
+      if (result.code === 0) {
+        // 将user保存到vuex
+        // 去个人中心页面
+        this.$router.replace("/profile");
+      } else {
+        // 显示新的图形验证码
+        this.getCaptcha();
+        // 显示警告提示
+        const msg = result.msg;
+        this.alertShow(msg);
+      }
+    },
+    // 打开提示
+    openTip(alertText) {
+      this.alertShow = true;
+      this.alertText = alertText;
+      return;
+    },
+    // 关闭提示
+    closeTip() {
+      this.alertShow = false;
+      this.alertText = "";
+    },
+    // 获取一次验证码
+    getCaptcha() {
+      this.$refs.captcha.src =
+        "http://localhost:3000/captcha?time=" + Date.now();
     },
     goBack() {
       this.$router.back();
     }
   },
-  components: {}
+  components: {
+    AlertTip
+  }
 };
 </script>
 

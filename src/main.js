@@ -6,6 +6,8 @@ import FastClick from 'fastclick'
 import router from './router'
 import store from './store'
 
+import "./mock/mockServer"
+
 if ('addEventListener' in document) {
   document.addEventListener('DOMContentLoaded', function () {
     FastClick.attach(document.body
