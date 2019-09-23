@@ -67,7 +67,7 @@ export default {
   recordUser({ commit }, userInfo) {
     commit(RECEIVE_USER_INFO, { userInfo })
   },
-
+  
   // 异步获取用户信息
   async getUserInfo({ commit }) {
     const result = await reqUserInfo()

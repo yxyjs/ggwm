@@ -3,15 +3,12 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
+// 外层较大路由,采用路由组件懒加载
 const Msite = () => import('../pages/Msite/Msite.vue')
 const Search = () => import('../pages/Search/Search.vue')
 const Order = () => import('../pages/Order/Order.vue')
 const Profile = () => import('../pages/Profile/Profile.vue')
-// const Login = () => import('../pages/Login/Login.vue')
-// const Shop = () => import('../pages/Shop/Shop.vue')
-// const ShopGoods = () => import('../pages/Shop/ShopGoods/ShopGoods.vue')
-// const ShopRating = () => import('../pages/Shop/ShopRating/ShopRating.vue')
-// const ShopInfo = () => import('../pages/Shop/ShopInfo/ShopInfo.vue')
+
 import Login from '../pages/Login/Login.vue'
 import Shop from '../pages/Shop/Shop.vue'
 import ShopGoods from '../pages/Shop/ShopGoods/ShopGoods.vue'

@@ -30,7 +30,7 @@
                 @click="showFood(food)"
               >
                 <div class="icon">
-                  <img width="57" height="57" :src="food.icon" />
+                  <img width="57" height="57" v-lazy="food.icon" />
                 </div>
                 <div class="content">
                   <h2 class="name">{{food.name}}</h2>

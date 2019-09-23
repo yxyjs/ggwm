@@ -6,6 +6,13 @@ import FastClick from 'fastclick'
 import router from './router'
 import store from './store'
 
+import loading from './common/imgs/loading.gif'
+import './fiters'
+import VueLazyload from 'vue-lazyload'
+Vue.use(VueLazyload, {
+  loading
+})
+
 import "./mock/mockServer"
 
 if ('addEventListener' in document) {
